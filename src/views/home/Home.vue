@@ -45,9 +45,10 @@
           'sell': {page: 0, list: []},
         },
         currentType: 'pop',
-        isShowBackTop: true,
+        isShowBackTop: false,
         tapOffsetTop: 0,
-        isTabFixed: false
+        isTabFixed: false,
+        homeItemListener: null
       }
     },
     computed: {
@@ -73,16 +74,19 @@
     },
     mounted() {
       // 事件总线监听图片加载完成，完成后刷新better-scroll
-      const refresh = debounce(this.$refs.scroll.refresh, 50);
-      this.$bus.$on('itemImageLoad', () => {
-        refresh()
-      })
+      const homeRefresh = debounce(this.$refs.scroll.refresh, 50);
+      this.homeItemListener = () => {
+        homeRefresh();
+        // console.log('homeRefresh');
+      };
+      this.$bus.$on('itemImageLoad', this.homeItemListener)
     },
     deactivated(){
       // console.log('deactived');
+      this.$bus.$off('itemImageLoad', this.homeItemListener)
     },
     activated(){
-
+      this.$refs.scroll.refresh()
     },
     methods: {
       /**
