@@ -11,7 +11,8 @@
       <goods-list :goods="recommends" ref="recommend"></goods-list>
     </scroll>
     <back-top @click.native="backClick" v-show="isShowBackTop"></back-top>
-    <detail-botton-bar></detail-botton-bar>
+    <detail-botton-bar @addToCart="addToCart"></detail-botton-bar>
+    <toast :isShow="isShow" :message="message"></toast>
   </div>
 </template>
 
@@ -28,6 +29,8 @@
   import Scroll from 'components/common/scroll/Scroll'
   import GoodsList from 'components/content/goods/GoodsList'
   import BackTop from 'components/content/backTop/BackTop'
+  import Toast from 'components/common/toast/Toast'
+
 
   import {getDetail, Goods, Shop, GoodsParam, getRecommend} from "network/detail";
   import {debounce} from "common/utils";
@@ -45,7 +48,8 @@
       DetailBottonBar,
       Scroll,
       GoodsList,
-      BackTop
+      BackTop,
+      Toast,
     },
     data() {
       return {
@@ -62,6 +66,8 @@
         getThemeTopY: null,
         currentIndex: 0,
         isShowBackTop: false,
+        message:'',
+        isShow: false
       }
     },
     created() {
@@ -69,7 +75,7 @@
       this.iid = this.$route.params.iid;
       // 获取详情数据
       getDetail(this.iid).then(res => {
-        console.log(res);
+        // console.log(res);
         const data = res.result;
         // 获取顶部轮播图数据
         this.topImages = data.itemInfo.topImages;
@@ -88,7 +94,7 @@
       });
       // 获取推荐数据
       getRecommend().then(res => {
-        console.log(res);
+        // console.log(res);
         this.recommends = res.data.list
       })
       // 给themeTopY进行防抖并赋值
@@ -99,7 +105,7 @@
         this.themeTopY.push(this.$refs.comment.$el.offsetTop);
         this.themeTopY.push(this.$refs.recommend.$el.offsetTop);
         this.themeTopY.push(Number.MAX_VALUE);
-        console.log(this.themeTopY);
+        // console.log(this.themeTopY);
       }, 100)
     },
     mounted() {
@@ -143,6 +149,26 @@
       // 点击返回顶部
       backClick() {
         this.$refs.scroll.scrollTo(0, 0, 500)
+      },
+      addToCart() {
+        // 获取购物车需要展示的信息
+        const product = {};
+        product.image = this.topImages[0];
+        product.title = this.goods.title;
+        product.desc = this.goods.desc;
+        product.price = this.goods.realPrice;
+        product.iid = this.iid;
+
+        // 将商品添加到购物车
+        this.$store.dispatch('addCart', product).then(res => {
+          this.isShow = true;
+          this.message = res;
+
+          setTimeout(() => {
+            this.isShow = false;
+            this.message = ''
+          }, 1500)
+        })
       }
     }
   }
